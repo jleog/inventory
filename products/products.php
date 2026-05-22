@@ -9,11 +9,13 @@
 $page_title = 'All Product';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(2);
+page_require_level(ROLE_SUPERVISOR);
 
 $all_categories = find_all('categories');
 $selected_category = 0;
-if ( isset( $_POST['product-category'] ) ) { $selected_category = (int)$_POST['product-category']; }
+if (!verify_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
+  if ( isset( $_POST['product-category'] ) ) {
+$selected_category = (int)$_POST['product-category']; }
 if ( ( isset($_POST['update_category'] ) ) && ( $selected_category > 0 ) ) {
 	$products = find_products_by_category($selected_category);
 } else {
@@ -25,6 +27,7 @@ if ( ( isset($_POST['update_category'] ) ) && ( $selected_category > 0 ) ) {
   <div class="col-md-6">
     <?php echo display_msg($msg); ?>
     <form method="post" action="">
+              <?php echo csrf_field(); ?>
         <div class="form-group">
           <div class="input-group">
             <span class="input-group-btn">
@@ -82,14 +85,14 @@ if ( ( isset($_POST['update_category'] ) ) && ( $selected_category > 0 ) ) {
 <!--     *************************     -->
                 <th> Product </th>
                 <th> Photo</th>
-                <th class="text-center" style="width: 10%;"> SKU</th>
-                <th class="text-center" style="width: 10%;"> Category </th>
-                <th class="text-center" style="width: 10%;"> Location </th>
-                <th class="text-center" style="width: 10%;"> Stock </th>
-                <th class="text-center" style="width: 10%;"> Cost Price </th>
-                <th class="text-center" style="width: 10%;"> Sale Price </th>
-                <th class="text-center" style="width: 10%;"> Product Added </th>
-                <th class="text-center" style="width: 100px;"> Actions </th>
+                <th class="text-center col-w-10p"> SKU</th>
+                <th class="text-center col-w-10p"> Category </th>
+                <th class="text-center col-w-10p"> Location </th>
+                <th class="text-center col-w-10p"> Stock </th>
+                <th class="text-center col-w-10p"> Cost Price </th>
+                <th class="text-center col-w-10p"> Sale Price </th>
+                <th class="text-center col-w-10p"> Product Added </th>
+                <th class="text-center col-w-100"> Actions </th>
               </tr>
 <!--     *************************     -->
             </thead>
@@ -98,19 +101,19 @@ if ( ( isset($_POST['update_category'] ) ) && ( $selected_category > 0 ) ) {
               <?php foreach ($products as $product):?>
               <tr>
 
-                <td><a href="../products/view_product.php?id=<?php echo (int)$product['id'];?>"><?php echo $product['name']; ?></a></td>
+                <td><a href="../products/view_product.php?id=<?php echo (int)$product['id'];?>"><?php echo h($product['name']); ?></a></td>
 
                 <td>
-                  <?php if ($product['media_id'] === '0'): ?>
+                  <?php if ((int)$product['media_id'] === 0): ?>
                     <img class="img-avatar img-circle" src="../uploads/products/no_image.jpg" alt="">
                   <?php else: ?>
-                  <img class="img-avatar img-circle" src="../uploads/products/<?php echo $product['image']; ?>" alt="">
+                  <img class="img-avatar img-circle" src="../uploads/products/<?php echo h($product['image']); ?>" alt="">
                 <?php endif; ?>
                 </td>
-                <td class="text-center"><?php echo $product['sku'];?></td>
-                <td class="text-center"> <?php echo $product['category']; ?></td>
-                <td class="text-center"> <?php echo $product['location']; ?></td>
-                <td class="text-center"> <?php echo $product['quantity']; ?></td>
+                <td class="text-center"><?php echo h($product['sku']);?></td>
+                <td class="text-center"> <?php echo h($product['category']); ?></td>
+                <td class="text-center"> <?php echo h($product['location']); ?></td>
+                <td class="text-center"> <?php echo h($product['quantity']); ?></td>
                 <td class="text-center"> <?php echo formatcurrency( $product['buy_price'], $CURRENCY_CODE); ?></td>
                 <td class="text-center"> <?php echo formatcurrency( $product['sale_price'], $CURRENCY_CODE); ?></td>
                 <td class="text-center"> <?php echo read_date($product['date']); ?></td>
@@ -123,7 +126,7 @@ if ( ( isset($_POST['update_category'] ) ) && ( $selected_category > 0 ) ) {
                     <a href="../products/edit_product.php?id=<?php echo (int)$product['id'];?>" class="btn btn-info btn-xs"  title="Edit" data-toggle="tooltip">
                       <span class="glyphicon glyphicon-edit"></span>
                     </a>
-                    <a href="../products/delete_product.php?id=<?php echo (int)$product['id'];?>" onClick="return confirm('Are you sure you want to delete?')" class="btn btn-danger btn-xs"  title="Delete" data-toggle="tooltip">
+                    <a href="../products/delete_product.php?id=<?php echo (int)$product['id'];?>&<?php echo csrf_url_param(); ?>" onClick="return confirm('Are you sure you want to delete?')" class="btn btn-danger btn-xs"  title="Delete" data-toggle="tooltip">
                       <span class="glyphicon glyphicon-trash"></span>
                     </a>
                   </div>

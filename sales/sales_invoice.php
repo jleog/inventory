@@ -9,7 +9,7 @@
 $page_title = 'Sales Invoice';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(3);
+page_require_level(ROLE_USER);
 $order_id  = 0;
 $order_total = 0;
 
@@ -30,51 +30,8 @@ $products_available = join_product_table();
  <head>
    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
    <title>Sales Invoice</title>
-     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css"/>
-   <style>
-   @media print {
-     html,body{
-        font-size: 9.5pt;
-        margin: 0;
-        padding: 0;
-     }.page-break {
-       page-break-before:always;
-       width: auto;
-       margin: auto;
-      }
-    }
-    .page-break{
-      width: 980px;
-      margin: 0 auto;
-    }
-     .sale-head{
-       margin: 40px 0;
-       text-align: center;
-     }.sale-head h1,.sale-head strong{
-       padding: 10px 20px;
-       display: block;
-     }.sale-head h1{
-       margin: 0;
-       border-bottom: 1px solid #212121;
-     }.table>thead:first-child>tr:first-child>th{
-       border-top: 1px solid #000;
-      }
-      table thead tr th {
-       text-align: center;
-       border: 1px solid #ededed;
-     }table tbody tr td{
-       vertical-align: middle;
-     }.sale-head,table.table thead tr th,table tbody tr td,table tfoot tr td{
-       border: 1px solid #212121;
-       white-space: nowrap;
-     }.sale-head h1,table thead tr th,table tfoot tr td{
-       background-color: #f8f8f8;
-     }tfoot{
-       color:#000;
-       text-transform: uppercase;
-       font-weight: 500;
-     }
-   </style>
+     <link rel="stylesheet" href="../libs/bootstrap/css/bootstrap.min.css"/>
+   <link rel="stylesheet" href="../libs/css/print.css"/>
 </head>
 <body>
   <?php if ($sales): ?>
@@ -86,19 +43,19 @@ $products_available = join_product_table();
        <div class="sale-head pull-left">
        <?php
 echo "<h1>";
-echo ucfirst($order['customer']);
+echo h(ucfirst($order['customer']));
 echo "</h1>";
-echo $customer['address'];
+echo h($customer['address']);
 echo "<br>";
-echo $customer['city'];
+echo h($customer['city']);
 echo "&nbsp;&nbsp;";
-echo $customer['region'];
+echo h($customer['region']);
 echo "&nbsp;&nbsp;";
-echo $customer['postcode'];
+echo h($customer['postcode']);
 echo "<br>";
 
 echo "&nbsp;&nbsp;";
-echo $customer['telephone']; echo "&nbsp; | &nbsp;"; echo $customer['email'];
+echo h($customer['telephone']); echo "&nbsp; | &nbsp;"; echo h($customer['email']);
 echo "&nbsp;&nbsp;";
 ?>
        </div>
@@ -115,7 +72,7 @@ echo "&nbsp;&nbsp;";
           <?php foreach ($sales as $sale): ?>
            <tr>
               <td class="text-center"><?php echo $sale['qty'];?></td>
-              <td class="text-center"><?php echo ucfirst($sale['name']);?></td>
+              <td class="text-center"><?php echo h(ucfirst($sale['name']));?></td>
               <td class="text-center">
                <?php
 foreach ( $products_available as $product ) {

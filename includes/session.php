@@ -33,11 +33,15 @@ class Session {
 
 
 	/**
+	 * Log in a user by ID. Regenerates session ID to prevent
+	 * session fixation attacks.
 	 *
 	 * @param unknown $user_id
 	 */
-	public function login($user_id) {
-		$_SESSION['user_id'] = $user_id;
+	public function login(int $user_id, int $org_id): void {
+		$_SESSION['user_id']        = $user_id;
+		$_SESSION['current_org_id'] = $org_id;
+		session_regenerate_id(true);
 	}
 
 
@@ -58,7 +62,7 @@ class Session {
 	 *
 	 */
 	public function logout() {
-		unset($_SESSION['user_id']);
+		unset($_SESSION['user_id'], $_SESSION['current_org_id']);
 	}
 
 
@@ -99,5 +103,3 @@ class Session {
 
 $session = new Session();
 $msg = $session->msg();
-
-?>

@@ -9,7 +9,7 @@
 $page_title = 'All Product';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(2);
+page_require_level(ROLE_SUPERVISOR);
 
 if ( isset( $_GET['id'] ) ) {
 	$product = find_by_id('products', (int)$_GET['id']);
@@ -53,7 +53,7 @@ if ( isset( $_GET['id'] ) ) {
 <h4><?php echo first_character($product['name']);?></h4>
 
 <div><label>Description:</label></div>
-<div><?php echo $product['description'];?></div>
+<div><?php echo h($product['description']);?></div>
 
     </div>
 
@@ -97,14 +97,14 @@ foreach ($all_photo as $photo) {
             <thead>
               <tr>
 <!--     *************************     -->
-                <th class="text-center" style="width: 10%;"> Category </th>
-                <th class="text-center" style="width: 10%;"> Location </th>
-                <th class="text-center" style="width: 10%;"> SKU </th>
-                <th class="text-center" style="width: 10%;"> Stock </th>
-                <th class="text-center" style="width: 15%;"> Cost Price </th>
-                <th class="text-center" style="width: 15%;"> Sale Price </th>
-                <th class="text-center" style="width: 15%;"> Product Added </th>
-                <th class="text-center" style="width: 50px;"> Actions </th>
+                <th class="text-center col-w-10p"> Category </th>
+                <th class="text-center col-w-10p"> Location </th>
+                <th class="text-center col-w-10p"> SKU </th>
+                <th class="text-center col-w-10p"> Stock </th>
+                <th class="text-center col-w-15p"> Cost Price </th>
+                <th class="text-center col-w-15p"> Sale Price </th>
+                <th class="text-center col-w-15p"> Product Added </th>
+                <th class="text-center col-w-50"> Actions </th>
               </tr>
 <!--     *************************     -->
             </thead>
@@ -120,9 +120,9 @@ foreach ($all_categories as $category ) {
 }
 ?>
  			    <td class="text-center"> <?php echo $category['name']; ?></td>
-                <td class="text-center"> <?php echo $product['location']; ?></td>
-                <td class="text-center"> <?php echo $product['sku']; ?></td>
-                <td class="text-center"> <?php echo $product['quantity']; ?></td>
+                <td class="text-center"> <?php echo h($product['location']); ?></td>
+                <td class="text-center"> <?php echo h($product['sku']); ?></td>
+                <td class="text-center"> <?php echo h($product['quantity']); ?></td>
                 <td class="text-center"> <?php echo formatcurrency( $product['buy_price'], $CURRENCY_CODE); ?></td>
                 <td class="text-center"> <?php echo formatcurrency( $product['sale_price'], $CURRENCY_CODE); ?></td>
                 <td class="text-center"> <?php echo read_date($product['date']); ?></td>

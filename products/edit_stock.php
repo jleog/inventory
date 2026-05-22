@@ -9,7 +9,7 @@
 $page_title = 'Edit category';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(1);
+page_require_level(ROLE_ADMIN);
 ?>
 <?php
 //Display all catgories.
@@ -23,8 +23,9 @@ if (!$stock) {
 ?>
 
 <?php
-if (isset($_POST['edit_stock'])) {
-	$req_field = array('product_id', 'quantity');
+if (!verify_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
+  if (isset($_POST['edit_stock'])) {
+$req_field = array('product_id', 'quantity');
 	validate_fields($req_field);
 	$product_id = remove_junk($db->escape($_POST['product_id']));
 	$quantity = remove_junk($db->escape($_POST['quantity']));
@@ -53,7 +54,7 @@ if (isset($_POST['edit_stock'])) {
 	if (empty($errors)) {
 		$sql = "UPDATE stock SET";
 		$sql .= " product_id='{$product_id}', quantity='{$quantity}', comments='{$comments}', date='{$current_date}'";
-		$sql .= " WHERE id='{$stock['id']}'";
+		$sql .= " WHERE id='{$stock['id']}' AND org_id = '" . current_org_id() . "'";
 
 		$result = $db->query($sql);
 		if ($result && $db->affected_rows() === 1) {
@@ -93,6 +94,7 @@ if (isset($_POST['edit_stock'])) {
        </div>
        <div class="panel-body">
          <form method="post" action="">
+              <?php echo csrf_field(); ?>
 
            <div class="form-group">
               <label for="name" class="control-label"><?php echo $product['name'];?></label>
@@ -109,7 +111,7 @@ if (isset($_POST['edit_stock'])) {
            </div>
 
            <div class="form-group">
-               <input type="text" class="form-control" name="comments" value="<?php echo $stock['comments'];?>" placeholder="Notes">
+               <input type="text" class="form-control" name="comments" value="<?php echo h($stock['comments']);?>" placeholder="Notes">
            </div>
 
            <button type="submit" name="edit_stock" class="btn btn-primary">Update Inventory</button>

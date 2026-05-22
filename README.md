@@ -1,40 +1,85 @@
-# inventory
-Inventory Management System with invoices and picklists.
+# Inventory
 
-# Documentation
--[Install L.A.M.P. stack](https://projects.raspberrypi.org/en/projects/lamp-web-server-with-wordpress/) ( MySQL is now MariaDB ) ~ optionally install Wordpress
+Inventory Management System with invoices, picklists, and sales reporting.
 
-* Download the latest version.
+**Source**: https://github.com/bitsandbots/inventory
 
-* Not sure how this works?  Start with a clean ( empty ) database, then import **demo_inv.sql** and you've got some basic data to get    started! OR, try a clean database: import/load **inventory.sql** into your mysql database. This should set up the basic structure of the database system.
+PHP 8.x + MariaDB application targeting self-hosted deployment on Raspberry Pi or any Apache + MySQL host. Offline-first (no CDN dependencies). Three-role access control: Admin / Supervisor / User.
 
-* Modify the includes/config.php and change the variables to match your host, database, username and passwords.
+---
 
-* Change all Folder permission inside uploads folder either add them to group call `www-data` if available or `777`.
+## Quick start
 
-* Then logging in by typing **username** and **password**:
+```bash
+bash install.sh
+```
 
+The installer detects PHP, MySQL, and Apache, creates the database from `schema.sql`, generates a `.env` with a strong `APP_SECRET`, creates a least-privilege MySQL app user, and wires up an Apache vhost on port 8080.
 
-   Administrator        | Special User           | Default User
-   ---------------------| -----------------------| -------------------
-   **Username** : admin | **Username** : special | **Username** : user
-   **Password** : admin | **Password** : special | **Password** : user
-   
-****
--Additional documentation and configuration for your Inventory Management System:
+To wipe an existing deployment and reinstall fresh:
 
--[Hackster.io](https://www.hackster.io/bitsandbots/serving-your-own-inventory-management-system-6e8b53)
--[Blog](https://coreconduit.com/2019/02/07/using-a-raspberry-pi-for-your-own-inventory-management-system/)
+```bash
+bash install.sh --reinstall
+```
 
-# [Support](https://coreconduit.com/contact/)
-Contact Cory:  
-****
-If you find this project useful...
-[Donate](https://www.paypal.com/biz/fund?id=ZDR2NTBSKK7JE)
-****
+For manual install, troubleshooting, role-based workflows, and daily operations, see **[docs/setup-and-usage.md](docs/setup-and-usage.md)**.
 
-Enhanced by Cory J. Potter aka CoreConduit Consulting Services 2018 - 2020
+### Demo data (optional)
 
-The application was initially created by Siamon Hasan, using [php](http:php.net),
-[mysql](https://www.mysql.com) and [bootstrap](http://getbootstrap.com).
-****
+To populate the app with realistic sample data (12 products, 8 customers, 6 orders, 14 sales):
+
+```bash
+php scripts/demo_seed.php
+```
+
+Re-seed any time with `php scripts/demo_seed.php --clean`. See [docs/setup-and-usage.md](docs/setup-and-usage.md) for the full breakdown.
+
+### Developer hooks (optional)
+
+To run `php -l` on staged PHP files before each commit (same check CI runs):
+
+```bash
+bash scripts/install-hooks.sh
+```
+
+This points `core.hooksPath` at the tracked `.githooks/` directory. Bypass with `git commit --no-verify` if you need to commit despite a parse error.
+
+---
+
+## Default accounts
+
+Default passwords are seeded into `schema.sql` and **must be changed on first login**.
+
+| Role | Username | Password |
+|---|---|---|
+| Admin | `admin` | `admin` |
+| Supervisor | `special` | `special` |
+| User | `user` | `user` |
+
+---
+
+## Documentation
+
+| Document | Audience |
+|---|---|
+| [Setup & Usage](docs/setup-and-usage.md) | Operators — install, daily workflows, troubleshooting |
+| [Architecture](docs/architecture.md) | Developers — directory map, request lifecycle, RBAC model, schema |
+| [Tech Stack](docs/tech-stack.md) | Developers — runtime versions, security features, deployment target |
+| [API & Components](docs/api-components.md) | Developers — class methods, query helpers, CSRF helpers |
+| [Gap Analysis](docs/gap-analysis.md) | Maintainers — known issues, recent fixes, next steps |
+
+A standalone single-file offline reference: **[Blueprint_Overview.html](Blueprint_Overview.html)**
+
+---
+
+## Credits
+
+Originally created by Siamon Hasan (2018-2020) using [PHP](http://php.net), [MySQL](https://www.mysql.com), and [Bootstrap](http://getbootstrap.com).
+
+Enhanced by Cory J. Potter / CoreConduit Consulting Services. **v2.0 — 2026**: security hardening (bcrypt, prepared statements, CSRF on all forms and state-changing GETs, session-fixation prevention, output escaping); installer redesign with `--reinstall` flag; Apache vhost automation; least-privilege DB user provisioning.
+
+---
+
+## Support
+
+[Contact](https://coreconduit.com/contact/) — [Donate](https://www.paypal.com/biz/fund?id=ZDR2NTBSKK7JE)

@@ -9,13 +9,14 @@
 $page_title = 'Add Sale by SKU';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(3);
+page_require_level(ROLE_USER);
 
 $order_id = last_id('orders');
 $o_id = $order_id['id'];
 
-if (isset($_POST['add_sale'])) {
-	$req_fields = array('s_id', 'quantity', 'price', 'total' );
+if (!verify_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
+  if (isset($_POST['add_sale'])) {
+$req_fields = array('s_id', 'quantity', 'price', 'total' );
 	validate_fields($req_fields);
 	if (empty($errors)) {
 		$p_id      = $db->escape((int)$_POST['s_id']);
@@ -30,9 +31,9 @@ if (isset($_POST['add_sale'])) {
 		$s_date    = make_date();
 
 		$sql  = "INSERT INTO sales (";
-		$sql .= " product_id,order_id,qty,price,date";
+		$sql .= " product_id,order_id,qty,price,date,org_id";
 		$sql .= ") VALUES (";
-		$sql .= "'{$p_id}','{$o_id}','{$s_qty}','{$s_total}','{$s_date}'";
+		$sql .= "'{$p_id}','{$o_id}','{$s_qty}','{$s_total}','{$s_date}','" . current_org_id() . "'";
 		$sql .= ")";
 
 		if ($db->query($sql)) {
@@ -55,6 +56,7 @@ if (isset($_POST['add_sale'])) {
   <div class="col-md-6">
     <?php echo display_msg($msg); ?>
     <form method="post" action="../sales/ajax_sku.php" autocomplete="off" id="sug-sku-form">
+              <?php echo csrf_field(); ?>
         <div class="form-group">
           <div class="input-group">
             <span class="input-group-btn">
@@ -91,16 +93,17 @@ if (isset($_POST['add_sale'])) {
       </div>
       <div class="panel-body">
         <form method="post" action="../sales/add_sale_by_sku.php">
+              <?php echo csrf_field(); ?>
          <table class="table table-bordered">
            <thead>
-            <th class="text-center" style="width: 100px;">Product </th>
-            <th class="text-center" style="width: 50px;"> SKU </th>
-            <th class="text-center" style="width: 50px;"> Location </th>
-            <th class="text-center" style="width: 15px;"> Available </th>
-            <th class="text-center" style="width: 15px;"> Quantity </th>
-            <th class="text-center" style="width: 50px;"> Price </th>
-            <th class="text-center" style="width: 50px;"> Total </th>
-            <th class="text-center" style="width: 50px;"> Action</th>
+            <th class="text-center col-w-100">Product </th>
+            <th class="text-center col-w-50"> SKU </th>
+            <th class="text-center col-w-50"> Location </th>
+            <th class="text-center col-w-15"> Available </th>
+            <th class="text-center col-w-15"> Quantity </th>
+            <th class="text-center col-w-50"> Price </th>
+            <th class="text-center col-w-50"> Total </th>
+            <th class="text-center col-w-50"> Action</th>
            </thead>
              <tbody  id="product_info"> </tbody>
          </table>

@@ -9,7 +9,7 @@
 $page_title = 'Edit Product';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(2);
+page_require_level(ROLE_SUPERVISOR);
 $id = filter_var($_GET['id'], FILTER_VALIDATE_INT);
 $product = find_by_id('products', $id);
 $all_categories = find_all('categories');
@@ -19,8 +19,9 @@ if (!$product) {
 	redirect('../products/products.php');
 }
 
-if (isset($_POST['edit_product'])) {
-	$req_fields = array('product-title', 'product-category', 'product-quantity', 'cost-price', 'sale-price' );
+if (!verify_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
+  if (isset($_POST['edit_product'])) {
+$req_fields = array('product-title', 'product-category', 'product-quantity', 'cost-price', 'sale-price' );
 	validate_fields($req_fields);
 
 	if (empty($errors)) {
@@ -56,7 +57,7 @@ if (isset($_POST['edit_product'])) {
 		$query   = "UPDATE products SET";
 		$query  .=" name ='{$p_name}', description ='{$p_desc}', sku ='{$p_sku}',location ='{$p_loc}', quantity ='{$p_qty}',";
 		$query  .=" buy_price ='{$p_buy}',sale_price ='{$p_sale}',category_id ='{$p_cat}',media_id ='{$media_id}'";
-		$query  .=" WHERE id ='{$product['id']}'";
+		$query  .=" WHERE id ='{$product['id']}' AND org_id = '" . current_org_id() . "'";
 		$result = $db->query($query);
 		if ($result && $db->affected_rows() === 1) {
 			$session->msg('s', "Product Updated ");
@@ -95,6 +96,7 @@ if (isset($_POST['edit_product'])) {
         <div class="panel-body">
          <div class="col-md-12">
            <form method="post" action="../products/edit_product.php?id=<?php echo (int)$product['id'] ?>">
+              <?php echo csrf_field(); ?>
               <div class="form-group">
                 <div class="input-group">
                   <span class="input-group-addon">

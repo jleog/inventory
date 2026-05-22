@@ -9,7 +9,7 @@
 $page_title = 'Product Search';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(3);
+page_require_level(ROLE_USER);
 
 ?>
 <?php include_once '../layouts/header.php'; ?>
@@ -17,6 +17,7 @@ page_require_level(3);
   <div class="col-md-6">
     <?php echo display_msg($msg); ?>
     <form method="post" action="ajax_product.php" autocomplete="off" id="sug-search-form">
+              <?php echo csrf_field(); ?>
         <div class="form-group">
           <div class="input-group">
             <span class="input-group-btn">
@@ -41,16 +42,17 @@ page_require_level(3);
       </div>
       <div class="panel-body">
         <form method="post" action="">
+              <?php echo csrf_field(); ?>
          <table class="table table-bordered">
            <thead>
                 <th> Product Name </th>
                 <th> Photo</th>
-                <th class="text-center" style="width: 10%;"> SKU </th>
-                <th class="text-center" style="width: 10%;"> Location </th>
-                <th class="text-center" style="width: 10%;"> Stock </th>
-                <th class="text-center" style="width: 10%;"> Cost Price </th>
-                <th class="text-center" style="width: 10%;"> Sale Price </th>
-                <th class="text-center" style="width: 100px;"> Actions </th>
+                <th class="text-center col-w-10p"> SKU </th>
+                <th class="text-center col-w-10p"> Location </th>
+                <th class="text-center col-w-10p"> Stock </th>
+                <th class="text-center col-w-10p"> Cost Price </th>
+                <th class="text-center col-w-10p"> Sale Price </th>
+                <th class="text-center col-w-100"> Actions </th>
            </thead>
              <tbody  id="product_info"> </tbody>
          </table>

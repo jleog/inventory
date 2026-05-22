@@ -40,8 +40,25 @@ function remove_junk($str) {
 	$str = nl2br($str);
 	$str = trim($str);
 	$str = stripslashes($str);
-	$str = htmlspecialchars(strip_tags($str, ENT_QUOTES));
+	$str = strip_tags($str);
+	$str = htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
 	return $str;
+}
+
+
+/*--------------------------------------------------------------*/
+/* HTML-safe output helper — shorthand for htmlspecialchars
+/*--------------------------------------------------------------*/
+
+/**
+ * Escape a string for safe HTML output.
+ * Use this on ALL dynamic data before echoing into HTML context.
+ *
+ * @param mixed $str
+ * @return string
+ */
+function h($str) {
+    return htmlspecialchars((string)$str, ENT_QUOTES, 'UTF-8');
 }
 
 
@@ -81,6 +98,49 @@ function validate_fields($var) {
 			return $errors;
 		}
 	}
+}
+
+
+/*--------------------------------------------------------------*/
+/* Password complexity validation
+/*--------------------------------------------------------------*/
+
+if (!defined('PASSWORD_MIN_LENGTH')) {
+	define('PASSWORD_MIN_LENGTH', 8);
+}
+
+/**
+ * Validate password complexity. Returns null if OK, or an error string.
+ *
+ * Rules:
+ *   - Minimum length PASSWORD_MIN_LENGTH (8)
+ *   - At least one letter
+ *   - At least one digit
+ *   - Not in the short deny-list of obvious weak passwords
+ *
+ * Deliberately lenient — does not require special chars or mixed case,
+ * because long memorable passphrases beat short complex ones. Apps that
+ * need stricter rules should extend this in one place.
+ *
+ * @param string $password
+ * @return string|null Null if valid, otherwise the error message
+ */
+function validate_password(string $password): ?string
+{
+	if (strlen($password) < PASSWORD_MIN_LENGTH) {
+		return 'Password must be at least ' . PASSWORD_MIN_LENGTH . ' characters.';
+	}
+	if (!preg_match('/[A-Za-z]/', $password)) {
+		return 'Password must contain at least one letter.';
+	}
+	if (!preg_match('/[0-9]/', $password)) {
+		return 'Password must contain at least one digit.';
+	}
+	$deny = ['password', 'password1', 'admin1234', 'changeme', 'inventory'];
+	if (in_array(strtolower($password), $deny, true)) {
+		return 'That password is too common — choose something less guessable.';
+	}
+	return null;
 }
 
 
@@ -182,7 +242,7 @@ function read_date($str) {
  * @return unknown
  */
 function make_date() {
-	return strftime("%Y-%m-%d %H:%M:%S", time());
+	return date("Y-m-d H:i:s");
 }
 
 
@@ -216,9 +276,84 @@ function randString($length = 5) {
 	$cha = "0123456789abcdefghijklmnopqrstuvwxyz";
 
 	for ($x=0; $x<$length; $x++)
-		$str .= $cha[mt_rand(0, strlen($cha))];
+		$str .= $cha[mt_rand(0, strlen($cha) - 1)];
 	return $str;
 }
 
 
-?>
+/*--------------------------------------------------------------*/
+/* CSRF Protection
+/*--------------------------------------------------------------*/
+
+/**
+ * Generate a CSRF token and store it in the session.
+ *
+ * @return string
+ */
+function csrf_token() {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+/**
+ * Output a hidden input field containing the CSRF token.
+ * Call this inside every <form method="post">.
+ *
+ * @return string
+ */
+function csrf_field() {
+    return '<input type="hidden" name="csrf_token" value="' . csrf_token() . '">';
+}
+
+/**
+ * Verify the CSRF token from a POST request.
+ *
+ * Returns true if valid or not a POST request (GET, HEAD, etc. are
+ * side-effect-free, so CSRF protection is not needed).
+ * Returns false if the token is missing or does not match.
+ *
+ * Callers should handle the failure response (redirect, error page, etc.).
+ *
+ * @return bool
+ */
+function verify_csrf(): bool
+{
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        return true;
+    }
+    $token = $_POST['csrf_token'] ?? '';
+    if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Return a query-string fragment containing the CSRF token for use in
+ * GET-based state-changing URLs (delete links, etc.).
+ *
+ * Usage: href="delete_foo.php?id=<?php echo $id ?>&<?php echo csrf_url_param() ?>"
+ *
+ * @return string  e.g. "csrf_token=abc123..."
+ */
+function csrf_url_param(): string
+{
+    return 'csrf_token=' . urlencode(csrf_token());
+}
+
+/**
+ * Verify the CSRF token in a GET-based state-changing handler.
+ * Token must be passed as the csrf_token query parameter.
+ *
+ * @return bool
+ */
+function verify_get_csrf(): bool
+{
+    $token = $_GET['csrf_token'] ?? '';
+    if (empty($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $token)) {
+        return false;
+    }
+    return true;
+}

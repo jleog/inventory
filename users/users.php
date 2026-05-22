@@ -15,7 +15,7 @@ require_once '../includes/load.php';
 
 <?php
 // Checkin What level user has permission to view this page
-page_require_level(1);
+page_require_level(ROLE_ADMIN);
 //pull out all user form database
 
 $all_users = find_all_user();
@@ -47,13 +47,13 @@ $all_users = find_all_user();
         <thead>
 <!--     *************************     -->
           <tr>
-            <th class="text-center" style="width: 50px;">ID#</th>
+            <th class="text-center col-w-50">ID#</th>
             <th>Name </th>
             <th>Username</th>
-            <th class="text-center" style="width: 15%;">User Role</th>
-            <th class="text-center" style="width: 10%;">Status</th>
-            <th style="width: 20%;">Last Login</th>
-            <th class="text-center" style="width: 100px;">Actions</th>
+            <th class="text-center col-w-15p">User Role</th>
+            <th class="text-center col-w-10p">Status</th>
+            <th class="col-w-20p">Last Login</th>
+            <th class="text-center col-w-100">Actions</th>
           </tr>
 <!--     *************************     -->
         </thead>
@@ -69,7 +69,7 @@ $all_users = find_all_user();
            <td class="text-center"><?php echo ucwords($a_user['group_name'])?></td>
 <!--     *************************     -->
            <td class="text-center">
-           <?php if ($a_user['status'] === '1'): ?>
+           <?php if ((int)$a_user['status'] === 1): ?>
             <span class="label label-success"><?php echo "Active"; ?></span>
           <?php else: ?>
             <span class="label label-danger"><?php echo "Deactive"; ?></span>
@@ -83,7 +83,7 @@ $all_users = find_all_user();
                 <a href="../users/edit_user.php?id=<?php echo (int)$a_user['id'];?>" class="btn btn-xs btn-warning" data-toggle="tooltip" title="Edit">
                   <i class="glyphicon glyphicon-pencil"></i>
                </a>
-                <a href="../users/delete_user.php?id=<?php echo (int)$a_user['id'];?>"  onClick="return confirm('Are you sure you want to delete?')" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Remove">
+                <a href="../users/delete_user.php?id=<?php echo (int)$a_user['id'];?>&<?php echo csrf_url_param(); ?>" onClick="return confirm('Are you sure you want to delete?')" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Remove">
                   <i class="glyphicon glyphicon-remove"></i>
                 </a>
                 </div>

@@ -9,7 +9,7 @@
 $page_title = 'All Group';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(1);
+page_require_level(ROLE_ADMIN);
 
 // Setting language var
 $lang->set('users.php');
@@ -43,13 +43,13 @@ $all_groups = find_all('user_groups');
       <table class="table table-bordered">
         <thead>
           <tr>
-            <th class="text-center" style="width: 50px;">#</th>
+            <th class="text-center col-w-50">#</th>
 <!--     *************************     -->
             <th>Group Name</th>
 <!--     *************************     -->
-            <th class="text-center" style="width: 20%;">Group Level</th>
-            <th class="text-center" style="width: 15%;">Status</th>
-            <th class="text-center" style="width: 100px;">Actions</th>
+            <th class="text-center col-w-20p">Group Level</th>
+            <th class="text-center col-w-15p">Status</th>
+            <th class="text-center col-w-100">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -65,7 +65,7 @@ $all_groups = find_all('user_groups');
            </td>
 <!--     *************************     -->
            <td class="text-center">
-           <?php if ($a_group['group_status'] === '1'): ?>
+           <?php if ((int)$a_group['group_status'] === 1): ?>
             <span class="label label-success"><?php echo "Active"; ?></span>
           <?php else: ?>
             <span class="label label-danger"><?php echo "Deactive"; ?></span>

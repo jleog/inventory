@@ -9,7 +9,7 @@
 $page_title = 'All Image';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(2);
+page_require_level(ROLE_SUPERVISOR);
 ?>
 <?php $media_files = find_all('media');?>
 <?php
@@ -56,11 +56,11 @@ if (isset($_POST['submit'])) {
             <table class="table">
               <thead>
                 <tr>
-                  <th class="text-center" style="width: 50px;">#</th>
+                  <th class="text-center col-w-50">#</th>
                   <th class="text-center">Photo</th>
                   <th class="text-center">Photo Name</th>
-                  <th class="text-center" style="width: 20%;">Photo Type</th>
-                  <th class="text-center" style="width: 50px;">Actions</th>
+                  <th class="text-center col-w-20p">Photo Type</th>
+                  <th class="text-center col-w-50">Actions</th>
                 </tr>
               </thead>
                 <tbody>
@@ -77,7 +77,7 @@ if (isset($_POST['submit'])) {
                   <?php echo $media_file['file_type'];?>
                 </td>
                 <td class="text-center">
-                  <a href="../products/delete_media.php?id=<?php echo (int) $media_file['id'];?>" onClick="return confirm('Are you sure you want to delete?')" class="btn btn-danger btn-xs"  title="Edit">
+                  <a href="../products/delete_media.php?id=<?php echo (int) $media_file['id'];?>&<?php echo csrf_url_param(); ?>" onClick="return confirm('Are you sure you want to delete?')" class="btn btn-danger btn-xs"  title="Edit">
                     <span class="glyphicon glyphicon-trash"></span>
                   </a>
                 </td>

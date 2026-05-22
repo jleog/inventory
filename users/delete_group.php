@@ -12,7 +12,8 @@ require_once '../includes/load.php';
 $lang->set('users.php');
 
 // Checkin What level user has permission to view this page
-page_require_level(1);
+page_require_level(ROLE_ADMIN);
+if (!verify_get_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
 ?>
 <?php
 $delete_id = delete_by_id('user_groups', (int)$_GET['id']);

@@ -13,12 +13,12 @@ require_once '../includes/load.php';
 $lang->set('users.php');
 
 // Checkin What level user has permission to view this page
-page_require_level(1); 
+page_require_level(ROLE_ADMIN);
 ?>
 <?php
-if (isset($_POST['add'])) {
-
-	$req_fields = array('group-name', 'group-level');
+if (!verify_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
+  if (isset($_POST['add'])) {
+$req_fields = array('group-name', 'group-level');
 	validate_fields($req_fields);
 
 	if (find_by_groupName($_POST['group-name']) === false ) {
@@ -60,6 +60,7 @@ if (isset($_POST['add'])) {
      </div>
      <?php echo display_msg($msg); ?>
       <form method="post" action="../users/add_group.php" class="clearfix">
+              <?php echo csrf_field(); ?>
         <div class="form-group">
               <label for="name" class="control-label"><?php echo $lang->get('GROUP_NAME') ?></label>
               <input type="name" class="form-control" name="group-name">

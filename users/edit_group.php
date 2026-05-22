@@ -9,7 +9,7 @@
 $page_title = 'Edit Group';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(1);
+page_require_level(ROLE_ADMIN);
 ?>
 
 <!--     *************************     -->
@@ -25,9 +25,9 @@ if (!$e_group) {
 <!--     *************************     -->
 
 <?php
-if (isset($_POST['update'])) {
-
-	$req_fields = array('group-name', 'group-level');
+if (!verify_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
+  if (isset($_POST['update'])) {
+$req_fields = array('group-name', 'group-level');
 	validate_fields($req_fields);
 	if (empty($errors)) {
 		$name = remove_junk($db->escape($_POST['group-name']));
@@ -67,6 +67,7 @@ if (isset($_POST['update'])) {
      </div>
      <?php echo display_msg($msg); ?>
       <form method="post" action="../users/edit_group.php?id=<?php echo (int)$e_group['id'];?>" class="clearfix">
+              <?php echo csrf_field(); ?>
 <!--     *************************     -->
         <div class="form-group">
               <label for="name" class="control-label">Group Name</label>
@@ -81,8 +82,8 @@ if (isset($_POST['update'])) {
         <div class="form-group">
           <label for="status">Status</label>
               <select class="form-control" name="status">
-                <option <?php if ($e_group['group_status'] === '1') echo 'selected="selected"';?> value="1"> Active </option>
-                <option <?php if ($e_group['group_status'] === '0') echo 'selected="selected"';?> value="0">Deactive</option>
+                <option <?php if ((int)$e_group['group_status'] === 1) echo 'selected="selected"';?> value="1"> Active </option>
+                <option <?php if ((int)$e_group['group_status'] === 0) echo 'selected="selected"';?> value="0">Deactive</option>
               </select>
         </div>
 <!--     *************************     -->

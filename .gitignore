@@ -1,0 +1,20 @@
+.env
+.env.local
+.env.production
+.env.bak.*
+*.log
+.DS_Store
+Thumbs.db
+.remember/
+
+# Pre-migration DB dumps produced by the deploy step in migrations/README.md
+# (e.g. `mysqldump ... > inventory-pre-004.sql`). Contain real data.
+inventory-pre-*.sql
+
+# Playwright MCP cache (browser state from local smoke testing)
+.playwright-mcp/
+includes/sql.php.bak
+tests/ui/.auth/*.json
+test-results/
+playwright-report/
+node_modules/

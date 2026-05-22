@@ -8,7 +8,8 @@
 
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(2);
+page_require_level(ROLE_SUPERVISOR);
+if (!verify_get_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
 ?>
 <?php
 $d_sale = find_by_id('sales', (int)$_GET['id']);
@@ -17,10 +18,18 @@ if (!$d_sale) {
 	$session->msg("d", "Missing sale id.");
 	redirect('../sales/sales.php');
 }
-// increase - add inventory back to stock
-if ( increase_product_qty( $d_sale['qty'], $d_sale['product_id']) ) {
-	$delete_id = delete_by_id('sales', (int)$d_sale['id']);
+
+// Check if the associated product still exists before restoring stock
+$product = find_by_id('products', $d_sale['product_id']);
+if ($product) {
+	// Product exists — restore stock
+	increase_product_qty( $d_sale['qty'], $d_sale['product_id'] );
+} else {
+	// Product was deleted (CASCADE) — log and continue with sale deletion
+	error_log("Sale #{$d_sale['id']} deleted but product #{$d_sale['product_id']} no longer exists. Stock not restored.");
 }
+
+$delete_id = soft_delete_by_id('sales', (int)$d_sale['id']);
 
 if ($delete_id) {
 	$session->msg("s", "sale deleted.");
@@ -29,5 +38,3 @@ if ($delete_id) {
 	$session->msg("d", "sale deletion failed.");
 	redirect('../sales/sales.php');
 }
-
-?>

@@ -9,7 +9,7 @@
 $page_title = 'All Categories';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(1);
+page_require_level(ROLE_ADMIN);
 
 $all_categories = find_all('categories')
 ?>
@@ -17,13 +17,14 @@ $all_categories = find_all('categories')
 <!--     *************************     -->
 
 <?php
-if (isset($_POST['add_cat'])) {
-	$req_field = array('category-name');
+if (!verify_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
+  if (isset($_POST['add_cat'])) {
+$req_field = array('category-name');
 	validate_fields($req_field);
 	$cat_name = remove_junk($db->escape($_POST['category-name']));
 	if (empty($errors)) {
-		$sql  = "INSERT INTO categories (name)";
-		$sql .= " VALUES ('{$cat_name}')";
+		$sql  = "INSERT INTO categories (name,org_id)";
+		$sql .= " VALUES ('{$cat_name}','" . current_org_id() . "')";
 		if ($db->query($sql)) {
 			$session->msg("s", "Successfully Added Category");
 			redirect('../products/categories.php', false);
@@ -60,6 +61,7 @@ if (isset($_POST['add_cat'])) {
         </div>
         <div class="panel-body">
           <form method="post" action="../products/categories.php">
+              <?php echo csrf_field(); ?>
             <div class="form-group">
 <!--     *************************     -->
                 <input type="text" class="form-control" name="category-name" placeholder="Category Name">
@@ -88,11 +90,11 @@ if (isset($_POST['add_cat'])) {
           <table class="table table-bordered table-striped table-hover">
             <thead>
                 <tr>
-                    <th class="text-center" style="width: 50px;">#</th>
+                    <th class="text-center col-w-50">#</th>
 <!--     *************************     -->
                     <th>Categories</th>
 <!--     *************************     -->
-                    <th class="text-center" style="width: 100px;">Actions</th>
+                    <th class="text-center col-w-100">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -106,7 +108,7 @@ if (isset($_POST['add_cat'])) {
                         <a href="../products/edit_category.php?id=<?php echo (int)$cat['id'];?>"  class="btn btn-xs btn-warning" data-toggle="tooltip" title="Edit">
                           <span class="glyphicon glyphicon-edit"></span>
                         </a>
-                        <a href="../products/delete_category.php?id=<?php echo (int)$cat['id'];?>"  onClick="return confirm('Are you sure you want to delete?')" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Remove">
+                        <a href="../products/delete_category.php?id=<?php echo (int)$cat['id'];?>&<?php echo csrf_url_param(); ?>" onClick="return confirm('Are you sure you want to delete?')" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Remove">
                           <span class="glyphicon glyphicon-trash"></span>
                         </a>
                       </div>

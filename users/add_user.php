@@ -13,14 +13,15 @@ require_once '../includes/load.php';
 $lang->set('users.php');
 
 // Checkin What level user has permission to view this page
-page_require_level(1);
+page_require_level(ROLE_ADMIN);
 
 
 $groups = find_all('user_groups');
 $all_users = find_all_user();
 
-if (isset($_POST['add_user'])) {
-	$req_fields = array('full-name', 'username', 'password', 'level' );
+if (!verify_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
+  if (isset($_POST['add_user'])) {
+$req_fields = array('full-name', 'username', 'password', 'level' );
 	validate_fields($req_fields);
 
 	if (empty($errors)) {
@@ -35,15 +36,19 @@ if (isset($_POST['add_user'])) {
 			}
 		}
 
-		$password   = remove_junk($db->escape($_POST['password']));
-		$user_level = (int)$db->escape($_POST['level']);
-		$password = sha1($password);
-		$query = "INSERT INTO users (";
-		$query .="name,username,password,user_level,status";
-		$query .=") VALUES (";
-		$query .=" '{$name}', '{$username}', '{$password}', '{$user_level}','1'";
-		$query .=")";
-		if ($db->query($query)) {
+		$password   = $_POST['password'];
+		$user_level = (int)$_POST['level'];
+		$pw_err = validate_password($password);
+		if ($pw_err !== null) {
+			$session->msg('d', $pw_err);
+			redirect('../users/add_user.php', false);
+		}
+		$password_hash = password_hash($password, PASSWORD_BCRYPT);
+		$stmt = $db->prepare_query(
+			"INSERT INTO users (name, username, password, user_level, status) VALUES (?, ?, ?, ?, '1')",
+			"sssi", $name, $username, $password_hash, $user_level
+		);
+		if ($stmt) {
 			//sucess
 			$session->msg('s', "User account has been created! ");
 			redirect('../users/add_user.php', false);
@@ -74,6 +79,7 @@ if (isset($_POST['add_user'])) {
       <div class="panel-body">
         <div class="col-md-6">
           <form method="post" action="../users/add_user.php">
+              <?php echo csrf_field(); ?>
             <div class="form-group">
                 <label for="name">Name</label>
                 <input type="text" class="form-control" name="full-name" placeholder="Full Name">

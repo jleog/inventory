@@ -9,7 +9,7 @@
 $page_title = 'All logs';
 require_once '.././includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(2);
+page_require_level(ROLE_SUPERVISOR);
 
 /**
  * CoreConduit Copyright (C) 2016 Cory J. Potter - All Rights Reserved
@@ -66,12 +66,12 @@ $logs = find_all('log');
           <table class="table table-bordered table-striped">
             <thead>
               <tr>
-	<th class="text-center" style="width: 15%;"> id  </th>
-	<th class="text-center" style="width: 15%;"> user_id  </th>
-	<th class="text-center" style="width: 15%;"> remote_ip  </th>
-	<th class="text-center" style="width: 15%;"> action </th>
-	<th class="text-center" style="width: 15%;"> date  </th>
-	<th class="text-center" style="width: 15%;"> Actions </th>
+	<th class="text-center col-w-15p"> id  </th>
+	<th class="text-center col-w-15p"> user_id  </th>
+	<th class="text-center col-w-15p"> remote_ip  </th>
+	<th class="text-center col-w-15p"> action </th>
+	<th class="text-center col-w-15p"> date  </th>
+	<th class="text-center col-w-15p"> Actions </th>
 
 </tr>
 </thead>
@@ -89,14 +89,14 @@ foreach ($logs as $log ) {
 <td class="text-center">
 <?php
 	$user =  find_by_id( "users", $log['user_id'] );
-	echo $user['name'];
+	echo h($user['name'] ?? '');
 ?>
 </td>
 <td class="text-center">
-<?php  echo $log['remote_ip']; ?>
+<?php  echo h($log['remote_ip']); ?>
 </td>
 <td class="text-center">
-<?php echo $log['action']; ?>
+<?php echo h($log['action']); ?>
 </td>
 
 <td class="text-center">
@@ -106,10 +106,10 @@ foreach ($logs as $log ) {
 
                <td class="text-center">
                   <div class="btn-group">
-                     <a href="../users/delete_log.php?id=<?php echo $log['id']; ?>" onClick="return confirm('Are you sure you want to delete?')" class="btn btn-warning btn-xs"  title="Delete" data-toggle="tooltip">
+                     <a href="../users/delete_log.php?id=<?php echo $log['id']; ?>&<?php echo csrf_url_param(); ?>" onClick="return confirm('Are you sure you want to delete?')" class="btn btn-warning btn-xs"  title="Delete" data-toggle="tooltip">
                        <span class="glyphicon glyphicon-trash"></span>
                      </a>
-                     <a href="../users/delete_log_by_ip.php?ip=<?php echo $log['remote_ip']; ?>" onClick="return confirm('Are you sure you want to delete?')" class="btn btn-danger btn-xs"  title="Delete By IP" data-toggle="tooltip">
+                     <a href="../users/delete_log_by_ip.php?ip=<?php echo h($log['remote_ip']); ?>&<?php echo csrf_url_param(); ?>" onClick="return confirm('Are you sure you want to delete?')" class="btn btn-danger btn-xs"  title="Delete By IP" data-toggle="tooltip">
                        <span class="glyphicon glyphicon-trash"></span>
                      </a>
                   </div>

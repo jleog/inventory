@@ -9,7 +9,7 @@
 $page_title = 'Monthly Sales';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(3);
+page_require_level(ROLE_USER);
 ?>
 <?php
 $year = date('Y');
@@ -34,21 +34,21 @@ $sales = monthlySales($year);
           <table class="table table-bordered table-striped">
             <thead>
               <tr>
-                <th class="text-center" style="width: 50px;">#</th>
+                <th class="text-center col-w-50">#</th>
                 <th> Product </th>
-                <th class="text-center" style="width: 15%;"> Quantity Sold</th>
-                <th class="text-center" style="width: 15%;"> Total </th>
-                <th class="text-center" style="width: 15%;"> Date </th>
+                <th class="text-center col-w-15p"> Quantity Sold</th>
+                <th class="text-center col-w-15p"> Total </th>
+                <th class="text-center col-w-15p"> Date </th>
              </tr>
             </thead>
            <tbody>
              <?php foreach ($sales as $sale):?>
              <tr>
                <td class="text-center"><?php echo count_id();?></td>
-               <td><?php echo $sale['name']; ?></td>
+               <td><?php echo h($sale['name']); ?></td>
                <td class="text-center"><?php echo (int)$sale['qty']; ?></td>
                <td class="text-center"><?php echo formatcurrency($sale['total_selling_price'],  $CURRENCY_CODE); ?></td>
-               <td class="text-center"><?php echo $sale['date']; ?></td>
+               <td class="text-center"><?php echo h($sale['date']); ?></td>
              </tr>
              <?php endforeach;?>
            </tbody>

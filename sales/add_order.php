@@ -9,21 +9,19 @@
 $page_title = 'Add Order';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(1);
-
-$all_orders = find_all('orders');
-$order_id = last_id('orders');
-$new_order_id = $order_id['id'] + 1;
+page_require_level(ROLE_ADMIN);
 
 ?>
 <?php
-if (isset($_POST['add_order'])) {
-	$req_fields = array('customer-name', 'paymethod' );
+if (!verify_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
+  if (isset($_POST['add_order'])) {
+$req_fields = array('customer-name', 'paymethod' );
 	validate_fields($req_fields);
 	$customer_name = $db->escape($_POST['customer-name']);
 	$paymethod = $db->escape($_POST['paymethod']);
 	$notes = '';
-	if (isset($_POST['notes'])) { $notes = $db->escape($_POST['notes']); }
+	if (isset($_POST['notes'])) {
+$notes = $db->escape($_POST['notes']); }
 	$c_address = "";
 	$c_city = "";
 	$c_region = "";
@@ -35,9 +33,9 @@ if (isset($_POST['add_order'])) {
 
 		if ( ! find_by_name('customers', $customer_name) ) {
 			$query  = "INSERT INTO customers (";
-			$query .=" name,address,city,region,postcode,telephone,email,paymethod";
+			$query .=" name,address,city,region,postcode,telephone,email,paymethod,org_id";
 			$query .=") VALUES (";
-			$query .=" '{$customer_name}', '{$c_address}','{$c_city}', '{$c_region}', '{$c_postcode}', '{$c_telephone}', '{$c_email}', '{$paymethod}'";
+			$query .=" '{$customer_name}', '{$c_address}','{$c_city}', '{$c_region}', '{$c_postcode}', '{$c_telephone}', '{$c_email}', '{$paymethod}', '" . current_org_id() . "'";
 			$query .=")";
 			$result = $db->query($query);
 			if ($result && $db->affected_rows() === 1) {
@@ -48,9 +46,10 @@ if (isset($_POST['add_order'])) {
 		}
 
 		$current_date    = make_date();
-		$sql  = "INSERT INTO orders (id,customer,paymethod,notes,date)";
-		$sql .= " VALUES ('{$new_order_id}','{$customer_name}','{$paymethod}','{$notes}','{$current_date}')";
+		$sql  = "INSERT INTO orders (customer,paymethod,notes,date,org_id)";
+		$sql .= " VALUES ('{$customer_name}','{$paymethod}','{$notes}','{$current_date}','" . current_org_id() . "')";
 		if ($db->query($sql)) {
+			$new_order_id = $db->insert_id();
 			$session->msg("s", "Successfully Added Order");
 			redirect( ( '../sales/add_sale_by_search.php?id=' . $new_order_id ) , false);
 		} else {
@@ -70,12 +69,12 @@ if (isset($_POST['add_order'])) {
     <div class="text-center">
 <!--     *************************     -->
        <h2>Add Order</h3>
-       <h3>#<?php echo $new_order_id;?></h3>
 <!--     *************************     -->
      </div>
      <?php echo display_msg($msg); ?>
 
       <form method="post" action="" class="clearfix">
+              <?php echo csrf_field(); ?>
 <!--     *************************     -->
         <div class="form-group">
         </div>

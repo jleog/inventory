@@ -9,7 +9,7 @@
 $page_title = 'All stock';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(1);
+page_require_level(ROLE_ADMIN);
 
 $all_stock = find_all('stock');
 $all_products = find_all('products');
@@ -39,11 +39,11 @@ $all_products = find_all('products');
           <table class="table table-bordered table-striped">
             <thead>
                 <tr>
-                    <th class="text-center" style="width: 50px;">Product</th>
-                    <th class="text-center" style="width: 50px;">Quantity</th>
-                    <th class="text-center" style="width: 50px;">Comments</th>
-                    <th class="text-center" style="width: 50px;">Date</th>
-                    <th class="text-center" style="width: 100px;">Actions</th>
+                    <th class="text-center col-w-50">Product</th>
+                    <th class="text-center col-w-50">Quantity</th>
+                    <th class="text-center col-w-50">Comments</th>
+                    <th class="text-center col-w-50">Date</th>
+                    <th class="text-center col-w-100">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -69,7 +69,7 @@ foreach ( $all_products as $product ) {
 
 
                     <td class="text-center">
-						<?php echo $stock['comments'];?>
+						<?php echo h($stock['comments']);?>
 					</td>
                     <td class="text-center">
 						<?php echo $stock['date'];?>
@@ -81,7 +81,7 @@ foreach ( $all_products as $product ) {
                         <a href="../products/edit_stock.php?id=<?php echo (int)$stock['id'];?>"  class="btn btn-xs btn-warning" data-toggle="tooltip" title="Edit">
                           <span class="glyphicon glyphicon-edit"></span>
                         </a>
-                        <a href="../products/delete_stock.php?id=<?php echo (int)$stock['id'];?>" onClick="return confirm('Are you sure you want to delete?')" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Remove">
+                        <a href="../products/delete_stock.php?id=<?php echo (int)$stock['id'];?>&<?php echo csrf_url_param(); ?>" onClick="return confirm('Are you sure you want to delete?')" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Remove">
                           <span class="glyphicon glyphicon-trash"></span>
                         </a>
                       </div>

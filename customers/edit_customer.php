@@ -9,7 +9,7 @@
 $page_title = 'Edit Customer';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(2);
+page_require_level(ROLE_SUPERVISOR);
 
 $customer = find_by_id('customers', (int)$_GET['id']);
 
@@ -19,8 +19,9 @@ if (!$customer) {
 }
 ?>
 <?php
-if (isset($_POST['edit_customer'])) {
-	$req_fields = array('customer-name' );
+if (!verify_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
+  if (isset($_POST['edit_customer'])) {
+$req_fields = array('customer-name' );
 	validate_fields($req_fields);
 
 	if (empty($errors)) {
@@ -66,7 +67,7 @@ if (isset($_POST['edit_customer'])) {
 			$query   = "UPDATE customers SET";
 			$query  .=" name ='{$c_name}', address ='{$c_address}', city ='{$c_city}', region ='{$c_region}', postcode ='{$c_postcode}', telephone ='{$c_telephone}', email ='{$c_email}',";
 			$query  .=" paymethod ='{$c_paymethod}'";
-			$query  .=" WHERE id ='{$customer['id']}'";
+			$query  .=" WHERE id ='{$customer['id']}' AND org_id = '" . current_org_id() . "'";
 			$result = $db->query($query);
 			if ($result && $db->affected_rows() === 1) {
 				$session->msg('s', 'Customer Updated!');
@@ -108,13 +109,14 @@ if (isset($_POST['edit_customer'])) {
         <div class="panel-body">
          <div class="col-md-7">
            <form method="post" action="../customers/edit_customer.php?id=<?php echo (int)$customer['id'] ?>">
+              <?php echo csrf_field(); ?>
               <div class="form-group">
                 <div class="input-group">
                   <span class="input-group-addon">
                    <i class="glyphicon glyphicon-user"></i>
                   </span>
-                  <input type="text" class="form-control" name="customer-name" value="<?php echo $customer['name'];?>" disabled>
-                  <input type="hidden" class="form-control" name="customer-name" value="<?php echo $customer['name'];?>">
+                  <input type="text" class="form-control" name="customer-name" value="<?php echo h($customer['name']);?>" disabled>
+                  <input type="hidden" class="form-control" name="customer-name" value="<?php echo h($customer['name']);?>">
                </div>
               </div>
 
@@ -124,7 +126,7 @@ if (isset($_POST['edit_customer'])) {
                   <span class="input-group-addon">
                    <i class="glyphicon glyphicon-home"></i>
                   </span>
-                  <input type="text" class="form-control" name="customer-address" value="<?php echo $customer['address'];?>" placeholder="Address">
+                  <input type="text" class="form-control" name="customer-address" value="<?php echo h($customer['address']);?>" placeholder="Address">
                </div>
               </div>
               <div class="form-group">
@@ -132,7 +134,7 @@ if (isset($_POST['edit_customer'])) {
                   <span class="input-group-addon">
                    <i class="glyphicon glyphicon-home"></i>
                   </span>
-                  <input type="text" class="form-control" name="customer-city" value="<?php echo $customer['city'];?>" placeholder="City">
+                  <input type="text" class="form-control" name="customer-city" value="<?php echo h($customer['city']);?>" placeholder="City">
                </div>
               </div>
               <div class="form-group">
@@ -140,7 +142,7 @@ if (isset($_POST['edit_customer'])) {
                   <span class="input-group-addon">
                    <i class="glyphicon glyphicon-home"></i>
                   </span>
-                  <input type="text" class="form-control" name="customer-region" value="<?php echo $customer['region'];?>" placeholder="State / Province / Region">
+                  <input type="text" class="form-control" name="customer-region" value="<?php echo h($customer['region']);?>" placeholder="State / Province / Region">
                </div>
               </div>
 
@@ -149,7 +151,7 @@ if (isset($_POST['edit_customer'])) {
                   <span class="input-group-addon">
                    <i class="glyphicon glyphicon-envelope"></i>
                   </span>
-                  <input type="text" class="form-control" name="customer-postcode" value="<?php echo $customer['postcode'];?>" placeholder="Postal Code">
+                  <input type="text" class="form-control" name="customer-postcode" value="<?php echo h($customer['postcode']);?>" placeholder="Postal Code">
                </div>
               </div>
               <div class="form-group">
@@ -157,7 +159,7 @@ if (isset($_POST['edit_customer'])) {
                   <span class="input-group-addon">
                    <i class="glyphicon glyphicon-phone"></i>
                   </span>
-                  <input type="text" class="form-control" name="customer-telephone" value="<?php echo $customer['telephone'];?>" placeholder="Telephone">
+                  <input type="text" class="form-control" name="customer-telephone" value="<?php echo h($customer['telephone']);?>" placeholder="Telephone">
                </div>
               </div>
               <div class="form-group">
@@ -165,7 +167,7 @@ if (isset($_POST['edit_customer'])) {
                   <span class="input-group-addon">
                    <i class="glyphicon glyphicon-globe"></i>
                   </span>
-                  <input type="text" class="form-control" name="customer-email" value="<?php echo $customer['email'];?>" placeholder="Email">
+                  <input type="text" class="form-control" name="customer-email" value="<?php echo h($customer['email']);?>" placeholder="Email">
                </div>
               </div>
 

@@ -9,7 +9,7 @@
 $page_title = 'Add Sale by Search';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(3);
+page_require_level(ROLE_USER);
 $order_id = 0;
 
 if (isset($_GET['id'])) {
@@ -21,8 +21,9 @@ if (isset($_GET['id'])) {
 
 
 
-if (isset($_POST['add_sale'])) {
-	$req_fields = array('s_id', 'order_id', 'quantity', 'sale_price');
+if (!verify_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
+  if (isset($_POST['add_sale'])) {
+$req_fields = array('s_id', 'order_id', 'quantity', 'sale_price');
 	validate_fields($req_fields);
 	if (empty($errors)) {
 		$p_id      = $db->escape((int)$_POST['s_id']);
@@ -41,23 +42,23 @@ if (isset($_POST['add_sale'])) {
 		$date    = make_date();
 
 		$sql  = "INSERT INTO sales (";
-		$sql .= " product_id,order_id,qty,price,date";
+		$sql .= " product_id,order_id,qty,price,date,org_id";
 		$sql .= ") VALUES (";
 		//$sql .= "'{$p_id}','{$s_qty}','{$s_total}','{$s_date}'";
-		$sql .= "'{$p_id}','{$o_id}','{$s_qty}','{$s_total}','{$date}'";
+		$sql .= "'{$p_id}','{$o_id}','{$s_qty}','{$s_total}','{$date}','" . current_org_id() . "'";
 		$sql .= ")";
 
 		if ($db->query($sql)) {
 			decrease_product_qty($s_qty, $p_id);
 			$session->msg('s', "Sale added. ");
-			redirect( ( '../sales/sales_by_order.php?id=' . $order_id ) , false);
+			redirect('../sales/orders.php', false);
 		} else {
 			$session->msg('d', ' Sorry failed to add!');
-			redirect( ( '../sales/sales_by_order.php?id=' . $order_id ) , false);
+			redirect('../sales/orders.php', false);
 		}
 	} else {
 		$session->msg("d", $errors);
-		redirect( ( '../sales/sales_by_order.php?id=' . $order_id ) , false);
+		redirect('../sales/orders.php', false);
 	}
 }
 
@@ -71,6 +72,7 @@ $all_categories = find_all('categories');
   <div class="col-md-6">
     <?php echo display_msg($msg); ?>
     <form method="post" action="../sales/add_sale_by_search.php?id=<?php echo $order_id; ?>">
+              <?php echo csrf_field(); ?>
         <div class="form-group">
           <div class="input-group">
             <span class="input-group-btn">
@@ -107,14 +109,14 @@ $all_categories = find_all('categories');
       <div class="panel-body">
          <table class="table table-bordered">
            <thead>
-            <th class="text-center" style="width: 15px;"> Product </th>
-            <th class="text-center" style="width: 50px;"> Photo </th>
-            <th class="text-center" style="width: 15px;"> SKU </th>
-            <th class="text-center" style="width: 50px;"> Location </th>
-            <th class="text-center" style="width: 15px;"> Available </th>
-            <th class="text-center" style="width: 15px;"> Quantity </th>
-            <th class="text-center" style="width: 50px;"> Price </th>
-            <th class="text-center" style="width: 50px;"> Action</th>
+            <th class="text-center col-w-15"> Product </th>
+            <th class="text-center col-w-50"> Photo </th>
+            <th class="text-center col-w-15"> SKU </th>
+            <th class="text-center col-w-50"> Location </th>
+            <th class="text-center col-w-15"> Available </th>
+            <th class="text-center col-w-15"> Quantity </th>
+            <th class="text-center col-w-50"> Price </th>
+            <th class="text-center col-w-50"> Action</th>
            </thead>
 
 <?php
@@ -138,30 +140,31 @@ if (isset($_POST['search']) && strlen($_POST['search'])) {
 
 ?>
         <form method="post" action="../sales/add_sale_by_search.php?id=<?php echo $order_id; ?>">
+              <?php echo csrf_field(); ?>
 
 <tr>
 <td id="s_name">
-<?php echo $product['name'];?>
+<?php echo h($product['name']);?>
 </td>
                 <td>
-                  <?php if ($product['media_id'] === '0'): ?>
+                  <?php if ((int)$product['media_id'] === 0): ?>
                     <img class="img-avatar img-circle" src="../uploads/products/no_image.jpg" alt="">
                   <?php else: ?>
                   <img class="img-avatar img-circle" src="../uploads/products/<?php echo $product['image']; ?>" alt="">
                 <?php endif; ?>
                 </td>
 <td class="text-center">
-<?php echo $product['sku']; ?>
+<?php echo h($product['sku']); ?>
 </td>
 <td class="text-center">
-<?php echo $product['location']; ?>
+<?php echo h($product['location']); ?>
 </td>
 <input type="hidden" name="s_id" value="<?php echo $product['id']; ?>">
 <input type="hidden" name="order_id" value="<?php echo $order_id; ?>">
 <input type="hidden" class="form-control" name="sale_price" value="<?php echo $product['sale_price']; ?>">
 
 <td class="text-center">
-<?php echo $product['quantity']; ?>
+<?php echo h($product['quantity']); ?>
 </td>
 <td id="s_qty">
 

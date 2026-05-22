@@ -9,7 +9,7 @@
 $page_title = 'Edit User';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(1);
+page_require_level(ROLE_ADMIN);
 ?>
 
 <!--     *************************     -->
@@ -27,8 +27,9 @@ if (!$e_user) {
 
 <?php
 //Update User basic info
-if (isset($_POST['update'])) {
-	$req_fields = array('name', 'username', 'level');
+if (!verify_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
+  if (isset($_POST['update'])) {
+$req_fields = array('name', 'username', 'level');
 	validate_fields($req_fields);
 	if (empty($errors)) {
 		$id = (int)$e_user['id'];
@@ -58,15 +59,24 @@ if (isset($_POST['update'])) {
 <?php
 // Update user password
 if (isset($_POST['update-pass'])) {
-	$req_fields = array('password');
+$req_fields = array('password');
 	validate_fields($req_fields);
 	if (empty($errors)) {
 		$id = (int)$e_user['id'];
-		$password = remove_junk($db->escape($_POST['password']));
-		$h_pass   = sha1($password);
-		$sql = "UPDATE users SET password='{$h_pass}' WHERE id='{$db->escape($id)}'";
-		$result = $db->query($sql);
-		if ($result && $db->affected_rows() === 1) {
+		$password = $_POST['password'];
+		$pw_err = validate_password($password);
+		if ($pw_err !== null) {
+			$session->msg('d', $pw_err);
+			redirect('../users/edit_user.php?id='.(int)$e_user['id'], false);
+		}
+		$h_pass   = password_hash($password, PASSWORD_BCRYPT);
+		$stmt = $db->prepare_query(
+			"UPDATE users SET password = ? WHERE id = ?",
+			"si", $h_pass, $id
+		);
+		$affected = $stmt->affected_rows;
+		$stmt->close();
+		if ($affected === 1) {
 			$session->msg('s', "User password has been updated ");
 			redirect('../users/edit_user.php?id='.(int)$e_user['id'], false);
 		} else {
@@ -104,6 +114,7 @@ if (isset($_POST['update-pass'])) {
        <div class="panel-body">
 
           <form method="post" action="../users/edit_user.php?id=<?php echo (int)$e_user['id'];?>" class="clearfix">
+              <?php echo csrf_field(); ?>
 <!--     *************************     -->
             <div class="form-group">
                   <label for="name" class="control-label">Name</label>
@@ -119,7 +130,7 @@ if (isset($_POST['update-pass'])) {
               <label for="level">User Role</label>
                 <select class="form-control" name="level">
                   <?php foreach ($groups as $group ):?>
-                   <option <?php if ($group['group_level'] === $e_user['user_level']) echo 'selected="selected"';?> value="<?php echo $group['group_level'];?>"><?php echo ucwords($group['group_name']);?></option>
+                   <option <?php if ((int)$group['group_level'] === (int)$e_user['user_level']) echo 'selected="selected"';?> value="<?php echo (int)$group['group_level'];?>"><?php echo h(ucwords($group['group_name']));?></option>
                 <?php endforeach;?>
                 </select>
             </div>
@@ -127,8 +138,8 @@ if (isset($_POST['update-pass'])) {
             <div class="form-group">
               <label for="status">Status</label>
                 <select class="form-control" name="status">
-                  <option <?php if ($e_user['status'] === '1') echo 'selected="selected"';?>value="1">Active</option>
-                  <option <?php if ($e_user['status'] === '0') echo 'selected="selected"';?> value="0">Deactive</option>
+                  <option <?php if ((int)$e_user['status'] === 1) echo 'selected="selected"';?> value="1">Active</option>
+                  <option <?php if ((int)$e_user['status'] === 0) echo 'selected="selected"';?> value="0">Deactive</option>
                 </select>
             </div>
 <!--     *************************     -->

@@ -8,7 +8,8 @@
 
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(2);
+page_require_level(ROLE_SUPERVISOR);
+if (!verify_get_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
 ?>
 <?php
 $d_stock = find_by_id('stock', (int)$_GET['id']);
@@ -22,7 +23,7 @@ if (!$d_stock) {
 // decrease inventory
 if ( decrease_product_qty( $d_stock['quantity'], $d_stock['product_id']) ) {
 
-	$delete_id = delete_by_id('stock', (int)$d_stock['id']);
+	$delete_id = soft_delete_by_id('stock', (int)$d_stock['id']);
 }
 
 if ($delete_id) {

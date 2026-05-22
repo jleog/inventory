@@ -9,7 +9,7 @@
 $page_title = 'All Sales';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(3);
+page_require_level(ROLE_USER);
 ?>
 
 <?php $sales = find_all_sales(); ?>
@@ -36,12 +36,12 @@ page_require_level(3);
           <table class="table table-bordered table-striped">
             <thead>
               <tr>
-                <th class="text-center" style="width: 15%;">Order</th>
+                <th class="text-center col-w-15p">Order</th>
                 <th> Product </th>
-                <th class="text-center" style="width: 15%;"> Quantity</th>
-                <th class="text-center" style="width: 15%;"> Total </th>
-                <th class="text-center" style="width: 15%;"> Date </th>
-                <th class="text-center" style="width: 100px;"> Actions </th>
+                <th class="text-center col-w-15p"> Quantity</th>
+                <th class="text-center col-w-15p"> Total </th>
+                <th class="text-center col-w-15p"> Date </th>
+                <th class="text-center col-w-100"> Actions </th>
              </tr>
             </thead>
 
@@ -52,7 +52,7 @@ page_require_level(3);
 
              <tr>
                <td class="text-center"><?php echo (int)$sale['order_id']; ?></td>
-               <td><?php echo $sale['name']; ?></td>
+               <td><?php echo h($sale['name']); ?></td>
                <td class="text-center"><?php echo (int)$sale['qty']; ?></td>
                <td class="text-center"><?php echo formatcurrency($sale['price'], $CURRENCY_CODE); ?></td>
                <td class="text-center"><?php echo $sale['date']; ?></td>
@@ -61,7 +61,7 @@ page_require_level(3);
                      <a href="../sales/edit_sale.php?id=<?php echo (int)$sale['id'];?>" class="btn btn-warning btn-xs"  title="Edit" data-toggle="tooltip">
                        <span class="glyphicon glyphicon-edit"></span>
                      </a>
-                     <a href="../sales/delete_sale.php?id=<?php echo (int)$sale['id'];?>"  onClick="return confirm('Are you sure you want to delete?')" class="btn btn-danger btn-xs"  title="Delete" data-toggle="tooltip">
+                     <a href="../sales/delete_sale.php?id=<?php echo (int)$sale['id'];?>&<?php echo csrf_url_param(); ?>" onClick="return confirm('Are you sure you want to delete?')" class="btn btn-danger btn-xs"  title="Delete" data-toggle="tooltip">
                        <span class="glyphicon glyphicon-trash"></span>
                      </a>
                   </div>

@@ -9,7 +9,7 @@
 $page_title = 'Sales by Order';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(3);
+page_require_level(ROLE_USER);
 
 $order_id  = 0;
 
@@ -46,12 +46,12 @@ $order = find_by_id("orders", $order_id);
           <table class="table table-bordered table-striped table-hover">
             <thead>
                 <tr>
-                    <th class="text-center" style="width: 50px;">#</th>
-                    <th class="text-center" style="width: 50px;">Customer</th>
-                    <th class="text-center" style="width: 50px;">Pay Method</th>
-                    <th class="text-center" style="width: 50px;">Notes</th>
-                    <th class="text-center" style="width: 50px;">Date</th>
-                    <th class="text-center" style="width: 100px;">Actions</th>
+                    <th class="text-center col-w-50">#</th>
+                    <th class="text-center col-w-50">Customer</th>
+                    <th class="text-center col-w-50">Pay Method</th>
+                    <th class="text-center col-w-50">Notes</th>
+                    <th class="text-center col-w-50">Date</th>
+                    <th class="text-center col-w-100">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -68,7 +68,7 @@ $order = find_by_id("orders", $order_id);
 					</td>
 
                     <td class="text-center">
-						<?php echo $order['notes'];?>
+						<?php echo h($order['notes']);?>
 					</td>
 
                     <td class="text-center">
@@ -115,13 +115,13 @@ $order = find_by_id("orders", $order_id);
           <table class="table table-bordered table-striped">
             <thead>
               <tr>
-                <th class="text-center" style="width: 50px;">#</th>
+                <th class="text-center col-w-50">#</th>
                 <th> Product </th>
-                <th class="text-center" style="width: 15%;"> SKU </th>
-                <th class="text-center" style="width: 15%;"> Location </th>
-                <th class="text-center" style="width: 15%;"> Quantity </th>
-                <th class="text-center" style="width: 15%;"> Total </th>
-                <th class="text-center" style="width: 100px;"> Actions </th>
+                <th class="text-center col-w-15p"> SKU </th>
+                <th class="text-center col-w-15p"> Location </th>
+                <th class="text-center col-w-15p"> Quantity </th>
+                <th class="text-center col-w-15p"> Total </th>
+                <th class="text-center col-w-100"> Actions </th>
              </tr>
             </thead>
 
@@ -131,9 +131,9 @@ $order = find_by_id("orders", $order_id);
 
              <tr>
                <td class="text-center"><?php echo count_id();?></td>
-               <td><?php echo $sale['name']; ?></td>
-               <td class="text-center"><?php echo $sale['sku']; ?></td>
-               <td class="text-center"><?php echo $sale['location']; ?></td>
+               <td><?php echo h($sale['name']); ?></td>
+               <td class="text-center"><?php echo h($sale['sku']); ?></td>
+               <td class="text-center"><?php echo h($sale['location']); ?></td>
                <td class="text-center"><?php echo (int)$sale['qty']; ?></td>
                <td class="text-center"><?php echo formatcurrency($sale['price'], $CURRENCY_CODE); ?></td>
                <td class="text-center">

@@ -12,7 +12,7 @@
 $page_title = 'All Customers';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(1);
+page_require_level(ROLE_ADMIN);
 
 $all_customers = find_all('customers');
 
@@ -42,14 +42,14 @@ $all_customers = find_all('customers');
           <table class="table table-bordered table-striped">
           <thead>
                 <tr>
-                    <th class="text-center" style="width: 100px;">Customer</th>
-                    <th class="text-center" style="width: 100px;">City</th>
-                    <th class="text-center" style="width: 50px;">Region</th>
-                    <th class="text-center" style="width: 50px;">Code</th>
-                    <th class="text-center" style="width: 50px;">Telephone</th>
-                    <th class="text-center" style="width: 50px;">Email</th>
-                    <th class="text-center" style="width: 50px;">Pay Method</th>
-                    <th class="text-center" style="width: 50px;">Actions</th>
+                    <th class="text-center col-w-100">Customer</th>
+                    <th class="text-center col-w-100">City</th>
+                    <th class="text-center col-w-50">Region</th>
+                    <th class="text-center col-w-50">Code</th>
+                    <th class="text-center col-w-50">Telephone</th>
+                    <th class="text-center col-w-50">Email</th>
+                    <th class="text-center col-w-50">Pay Method</th>
+                    <th class="text-center col-w-50">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -58,24 +58,24 @@ $all_customers = find_all('customers');
               <?php foreach ($all_customers as $customer):?>
                 <tr>
                     <td class="text-center">
-						<?php echo ucfirst($customer['name']);?>
+						<?php echo h(ucfirst($customer['name']));?>
 					</td>
                     <td class="text-center">
-						<?php echo $customer['city'];?>
+						<?php echo h($customer['city']);?>
 					</td>
                     <td class="text-center">
-						<?php echo $customer['region'];?>
+						<?php echo h($customer['region']);?>
 					</td>
 
                     <td class="text-center">
-						<?php echo $customer['postcode'];?>
+						<?php echo h($customer['postcode']);?>
 					</td>
                    <td class="text-center">
-          					<a href="tel:<?php echo $customer['telephone'];?>"><?php echo $customer['telephone'];?></a>
+          					<a href="tel:<?php echo h($customer['telephone']);?>"><?php echo h($customer['telephone']);?></a>
           				</td>
 
                     <td class="text-center">
-          					<a href="mailto:<?php echo $customer['email'];?>"><?php echo $customer['email'];?></a>
+          					<a href="mailto:<?php echo h($customer['email']);?>"><?php echo h($customer['email']);?></a>
           				</td>
 
                     <td class="text-center">
@@ -87,7 +87,7 @@ $all_customers = find_all('customers');
                         <a href="../customers/edit_customer.php?id=<?php echo (int)$customer['id'];?>"  class="btn btn-xs btn-warning" data-toggle="tooltip" title="Edit">
                           <span class="glyphicon glyphicon-edit"></span>
                         </a>
-                        <a href="../customers/delete_customer.php?id=<?php echo (int)$customer['id'];?>" onClick="return confirm('Are you sure you want to delete?')" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Remove">
+                        <a href="../customers/delete_customer.php?id=<?php echo (int)$customer['id'];?>&<?php echo csrf_url_param(); ?>" onClick="return confirm('Are you sure you want to delete?')" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Remove">
                           <span class="glyphicon glyphicon-trash"></span>
                         </a>
                       </div>

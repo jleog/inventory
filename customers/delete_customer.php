@@ -8,7 +8,8 @@
 
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(2);
+page_require_level(ROLE_SUPERVISOR);
+if (!verify_get_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
 ?>
 <?php
 $d_customer = find_by_id('customers', (int)$_GET['id']);
@@ -19,7 +20,7 @@ if (!$d_customer) {
 }
 
 
-$delete_id = delete_by_id('customers', (int)$d_customer['id']);
+$delete_id = soft_delete_by_id('customers', (int)$d_customer['id']);
 
 if ($delete_id) {
 	$session->msg("s", "Customer Deleted.");

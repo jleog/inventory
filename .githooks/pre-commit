@@ -1,0 +1,107 @@
+#!/bin/bash
+#
+# .githooks/pre-commit
+#
+# 1. Run `php -l` on every staged .php file. Reject the commit if any of
+#    them has a parse error. Mirrors the "PHP Lint" job in
+#    .github/workflows/ci.yml so syntax errors are caught locally instead
+#    of after a push.
+#
+# 2. Guard against the unclosed-form-action-attribute regression class
+#    fixed in PR #31 (commit 56a730b). When a `<form ... action="...?>`
+#    tag drops the closing `"` before `csrf_field()` on the next line,
+#    the browser silently absorbs the CSRF hidden input into the action
+#    URL and the form never submits its token. Catch the pattern at
+#    commit time so it doesn't slip in again.
+#
+# Enable once per clone with:
+#     bash scripts/install-hooks.sh
+# (which sets `git config core.hooksPath .githooks`).
+
+set -u
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+if ! command -v php >/dev/null 2>&1; then
+    echo -e "${YELLOW}pre-commit: php not on PATH; skipping syntax check.${NC}" >&2
+    exit 0
+fi
+
+mapfile -d '' -t STAGED < <(
+    git diff --cached -z --name-only --diff-filter=ACMR -- '*.php'
+)
+
+if [ ${#STAGED[@]} -eq 0 ]; then
+    exit 0
+fi
+
+errors=0
+for file in "${STAGED[@]}"; do
+    [ -f "$file" ] || continue
+    if ! out=$(php -l "$file" 2>&1); then
+        echo -e "${RED}pre-commit: syntax error in${NC} $file" >&2
+        echo "$out" >&2
+        errors=$((errors + 1))
+    fi
+done
+
+if [ $errors -gt 0 ]; then
+    echo -e "${RED}pre-commit: ${errors} file(s) failed php -l. Commit aborted.${NC}" >&2
+    echo "Fix the errors and re-stage, or bypass with 'git commit --no-verify'." >&2
+    exit 1
+fi
+
+# Guard against unclosed action="..." on <form ... > lines (PR #31 regression).
+# An unclosed action quote swallows the next-line CSRF hidden input into the
+# action URL, breaking verify_csrf() on every POST.
+form_hits=0
+for file in "${STAGED[@]}"; do
+    [ -f "$file" ] || continue
+    if matches=$(grep -nE 'action="[^"]*$' "$file"); then
+        echo -e "${RED}pre-commit: unclosed action=\" in${NC} $file" >&2
+        echo "$matches" >&2
+        form_hits=$((form_hits + 1))
+    fi
+done
+
+if [ $form_hits -gt 0 ]; then
+    echo -e "${RED}pre-commit: ${form_hits} file(s) have an action attribute that does not close on the same line.${NC}" >&2
+    echo "This is the PR #31 bug class: csrf_field() on the next line gets absorbed into the action URL." >&2
+    echo "Close the quote on the <form> line, then place csrf_field() inside the form body." >&2
+    echo "Bypass with 'git commit --no-verify' only if you are certain this is intentional." >&2
+    exit 1
+fi
+
+# Guard: SELECT on org-scoped tables must reference org_id.
+# Detects hand-written SQL strings that query customers, products, categories,
+# sales, orders, stock, or media without an org_id filter. The check is
+# heuristic — it scans each staged file for "FROM <table>" patterns and warns
+# if org_id does not appear anywhere in the same file. Files that use
+# current_org_id_safe() with a conditional branch are acceptable and will
+# still pass because org_id appears in the file even in the filtered branch.
+ORG_TABLES="customers|products|categories|sales|orders|stock|media"
+org_hits=0
+for file in "${STAGED[@]}"; do
+    [ -f "$file" ] || continue
+    # Only check PHP files that contain at least one query on an org-scoped table.
+    if grep -qiE "FROM ($ORG_TABLES)\b" "$file" 2>/dev/null; then
+        if ! grep -q "org_id" "$file" 2>/dev/null; then
+            echo -e "${RED}pre-commit: missing org_id filter in${NC} $file" >&2
+            echo "  File queries an org-scoped table (${ORG_TABLES//|/, }) but contains no org_id reference." >&2
+            echo "  Add AND org_id = ? (or current_org_id_safe()) to every SELECT/UPDATE/DELETE on these tables." >&2
+            org_hits=$((org_hits + 1))
+        fi
+    fi
+done
+
+if [ $org_hits -gt 0 ]; then
+    echo -e "${RED}pre-commit: ${org_hits} file(s) missing org_id filter on org-scoped table queries.${NC}" >&2
+    echo "Bypass with 'git commit --no-verify' only if the query is intentionally cross-org." >&2
+    exit 1
+fi
+
+echo -e "${GREEN}pre-commit: php -l clean + form-action guard + org-scope guard clean (${#STAGED[@]} file(s)).${NC}"
+exit 0

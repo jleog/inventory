@@ -9,13 +9,14 @@
 $page_title = 'Add Product';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(2);
+page_require_level(ROLE_SUPERVISOR);
 
 $all_categories = find_all('categories');
 $all_photo = find_all('media');
 			
-if (isset($_POST['add_product'])) {
-	$req_fields = array('product-title', 'product-category', 'product-quantity', 'cost-price', 'sale-price' );
+if (!verify_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
+  if (isset($_POST['add_product'])) {
+$req_fields = array('product-title', 'product-category', 'product-quantity', 'cost-price', 'sale-price' );
 	validate_fields($req_fields);
 	if (empty($errors)) {
 		$p_name  = $db->escape(remove_junk($_POST['product-title']));
@@ -33,9 +34,9 @@ if (isset($_POST['add_product'])) {
 		}
 		$date    = make_date();
 		$query  = "INSERT INTO products (";
-		$query .=" name,description,sku,location,quantity,buy_price,sale_price,category_id,media_id,date";
+		$query .=" name,description,sku,location,quantity,buy_price,sale_price,category_id,media_id,date,org_id";
 		$query .=") VALUES (";
-		$query .=" '{$p_name}', '{$p_desc}', '{$p_sku}', '{$p_loc}', '{$p_qty}', '{$p_buy}', '{$p_sale}', '{$p_cat}', '{$media_id}', '{$date}'";
+		$query .=" '{$p_name}', '{$p_desc}', '{$p_sku}', '{$p_loc}', '{$p_qty}', '{$p_buy}', '{$p_sale}', '{$p_cat}', '{$media_id}', '{$date}', '" . current_org_id() . "'";
 		$query .=")";
 		$query .=" ON DUPLICATE KEY UPDATE name='{$p_name}'";
 		if ($db->query($query)) {
@@ -51,8 +52,8 @@ if (isset($_POST['add_product'])) {
 			$cost = $p_buy;
 			$comments = "initial stock";
 
-			$sql  = "INSERT INTO stock (product_id,quantity,comments,date)";
-			$sql .= " VALUES ('{$product_id}','{$quantity}','{$comments}','{$date}')";
+			$sql  = "INSERT INTO stock (product_id,quantity,comments,date,org_id)";
+			$sql .= " VALUES ('{$product_id}','{$quantity}','{$comments}','{$date}','" . current_org_id() . "')";
 			$result = $db->query($sql);
 			if ( $result && $db->affected_rows() === 1) {
 				$session->msg('s', "Product Added ");
@@ -95,6 +96,7 @@ if (isset($_POST['add_product'])) {
          <div class="col-md-12">
 <!--     *************************     -->
           <form method="post" action="../products/add_product.php" class="clearfix">
+              <?php echo csrf_field(); ?>
               <div class="form-group">
                 <div class="input-group">
                   <span class="input-group-addon">

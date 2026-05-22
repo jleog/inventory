@@ -13,33 +13,54 @@ require_once '../includes/load.php';
 $lang->set('users.php');
 
 // Checkin What level user has permission to view this page
-page_require_level(3);
+page_require_level(ROLE_USER);
 ?>
 <?php $user = current_user(); ?>
 <?php
-if (isset($_POST['update'])) {
-
-	$req_fields = array('new-password', 'old-password', 'id' );
+if (!verify_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
+  if (isset($_POST['update'])) {
+$req_fields = array('new-password', 'old-password', 'id' );
 	validate_fields($req_fields);
 
 	if (empty($errors)) {
 
-		if (sha1($_POST['old-password']) !== current_user()['password'] ) {
+		$stored_hash = current_user()['password'];
+		$old_password = $_POST['old-password'];
+		$old_valid = false;
+
+		// Handle both legacy SHA1 and modern bcrypt hashes
+		if (strlen($stored_hash) === 40 && ctype_xdigit($stored_hash)) {
+			$old_valid = hash_equals($stored_hash, sha1($old_password));
+		} else {
+			$old_valid = password_verify($old_password, $stored_hash);
+		}
+
+		if (!$old_valid) {
 			$session->msg('d', "Your old password not match");
 			redirect('../users/change_password.php', false);
 		}
 
+		$pw_err = validate_password($_POST['new-password']);
+		if ($pw_err !== null) {
+			$session->msg('d', $pw_err);
+			redirect('../users/change_password.php', false);
+		}
+
 		$id = (int)$_POST['id'];
-		$new = remove_junk($db->escape(sha1($_POST['new-password'])));
-		$sql = "UPDATE users SET password ='{$new}' WHERE id='{$db->escape($id)}'";
-		$result = $db->query($sql);
-		if ($result && $db->affected_rows() === 1):
+		$new_hash = password_hash($_POST['new-password'], PASSWORD_BCRYPT);
+		$stmt = $db->prepare_query(
+			"UPDATE users SET password = ? WHERE id = ?",
+			"si", $new_hash, $id
+		);
+		$affected = $stmt->affected_rows;
+		$stmt->close();
+		if ($affected === 1):
 			$session->logout();
-		$session->msg('s', "Login with your new password.");
-		redirect('index.php', false);
+			$session->msg('s', "Login with your new password.");
+			redirect('index.php', false);
 		else:
 			$session->msg('d', ' Sorry failed to updated!');
-		redirect('../users/change_password.php', false);
+			redirect('../users/change_password.php', false);
 		endif;
 	} else {
 		$session->msg("d", $errors);
@@ -54,6 +75,7 @@ if (isset($_POST['update'])) {
      </div>
      <?php echo display_msg($msg); ?>
       <form method="post" action="../users/change_password.php" class="clearfix">
+              <?php echo csrf_field(); ?>
         <div class="form-group">
               <label for="newPassword" class="control-label">New password</label>
               <input type="password" class="form-control" name="new-password" placeholder="New password">

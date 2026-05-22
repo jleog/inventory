@@ -9,7 +9,7 @@
 $page_title = 'Sale Report';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(3);
+page_require_level(ROLE_USER);
 ?>
 <?php include_once '../layouts/header.php'; ?>
 <div class="row">
@@ -24,6 +24,7 @@ page_require_level(3);
       <div class="jumbotron text-center">
       <h3>Sales Report</h3>
           <form class="clearfix" method="post" action="sale_report_process.php">
+              <?php echo csrf_field(); ?>
             <div class="form-group">
               <label class="form-label">Date Range</label>
                 <div class="input-group">

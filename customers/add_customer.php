@@ -9,10 +9,11 @@
 $page_title = 'Add Customer';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(2);
+page_require_level(ROLE_SUPERVISOR);
 
-if (isset($_POST['add_customer'])) {
-	$req_fields = array('customer-name' );
+if (!verify_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
+  if (isset($_POST['add_customer'])) {
+$req_fields = array('customer-name' );
 	validate_fields($req_fields);
 
 	if (empty($errors)) {
@@ -55,9 +56,9 @@ if (isset($_POST['add_customer'])) {
 
 		if ( ! find_by_name('customers', $c_name) ) {
 			$query  = "INSERT INTO customers (";
-			$query .=" name,address,city,region,postcode,telephone,email,paymethod";
+			$query .=" name,address,city,region,postcode,telephone,email,paymethod,org_id";
 			$query .=") VALUES (";
-			$query .=" '{$c_name}', '{$c_address}', '{$c_city}', '{$c_region}', '{$c_postcode}', '{$c_telephone}', '{$c_email}', '{$c_paymethod}'";
+			$query .=" '{$c_name}', '{$c_address}', '{$c_city}', '{$c_region}', '{$c_postcode}', '{$c_telephone}', '{$c_email}', '{$c_paymethod}', '" . current_org_id() . "'";
 			$query .=")";
 			$result = $db->query($query);
 			if ($result && $db->affected_rows() === 1) {
@@ -102,6 +103,7 @@ if (isset($_POST['add_customer'])) {
          <div class="col-md-7">
 <!--     *************************     -->
           <form method="post" action="../customers/add_customer.php" class="clearfix">
+              <?php echo csrf_field(); ?>
 <!--     *************************     -->
               <div class="form-group">
                 <div class="input-group">

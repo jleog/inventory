@@ -9,10 +9,7 @@
 $page_title = 'Admin Home Page';
 require_once '../includes/load.php';
 
-// Setting language var
-$lang->set('users.php');
-
-page_require_level(1);
+page_require_level(ROLE_ADMIN);
 
 $c_categories     = count_by_id('categories');
 $c_products       = count_by_id('products');
@@ -23,19 +20,6 @@ $recent_products = find_recent_product_added('5');
 $recent_sales    = find_recent_sale_added('5')
 ?>
 <?php include_once '../layouts/header.php'; ?>
-
-<script>
-function closePanel()
-{
-  var x = document.getElementById("myDIV");
-  if (x.style.display === "none")
-  {
-    x.style.display = "block";
-  } else {
-    x.style.display = "none";
-  }
-}
-</script>
 
 
 <div class="row">
@@ -105,7 +89,7 @@ function closePanel()
    <div class="col-md-12">
       <div class="panel">
         <div class="pull-right">
-		<a href="#" onclick="closePanel();" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Close"><i class="glyphicon glyphicon-remove"></i></a>
+		<a href="#" data-close-target="#myDIV" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Close"><i class="glyphicon glyphicon-remove"></i></a>
         </div>
 
         <div class="jumbotron text-center">
@@ -114,6 +98,33 @@ function closePanel()
 
       </div>
    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-3 col-sm-6">
+      <a href="../users/users.php" class="panel panel-info text-center">
+        <div class="panel-body">
+          <span class="glyphicon glyphicon-user" style="font-size:2em"></span>
+          <h4>Manage Users</h4>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <a href="../users/group.php" class="panel panel-info text-center">
+        <div class="panel-body">
+          <span class="glyphicon glyphicon-th" style="font-size:2em"></span>
+          <h4>Manage Groups</h4>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <a href="../orgs/orgs.php" class="panel panel-info text-center">
+        <div class="panel-body">
+          <span class="glyphicon glyphicon-th-list" style="font-size:2em"></span>
+          <h4>Organizations</h4>
+        </div>
+      </a>
+    </div>
   </div>
 
   <div class="row">
@@ -169,7 +180,7 @@ function closePanel()
           <table class="table table-striped table-bordered table-condensed">
        <thead>
          <tr>
-           <th class="text-center" style="width: 50px;">#</th>
+           <th class="text-center col-w-50">#</th>
            <th>Product</th>
            <th>Date</th>
            <th>Total Sale</th>
@@ -216,7 +227,7 @@ function closePanel()
       <?php foreach ($recent_products as  $recent_product): ?>
             <a class="list-group-item clearfix" href="../products/view_product.php?id=<?php echo    (int)$recent_product['id'];?>">
                 <h4 class="list-group-item-heading">
-                 <?php if ($recent_product['media_id'] === '0'): ?>
+                 <?php if ((int)$recent_product['media_id'] === 0): ?>
                     <img class="img-avatar img-circle" src="../uploads/products/no_image.jpg" alt="">
                   <?php else: ?>
                   <img class="img-avatar img-circle" src="../uploads/products/<?php echo $recent_product['image'];?>" alt="" />

@@ -9,7 +9,7 @@
 $page_title = 'All Orders';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(1);
+page_require_level(ROLE_ADMIN);
 
 $all_orders = find_all('orders');
 $orders = array_reverse($all_orders);
@@ -38,12 +38,12 @@ $orders = array_reverse($all_orders);
           <table class="table table-bordered table-striped">
             <thead>
                 <tr>
-                    <th class="text-center" style="width: 50px;">#</th>
-                    <th class="text-center" style="width: 50px;">Customer</th>
-                    <th class="text-center" style="width: 50px;">Pay Method</th>
-                    <th class="text-center" style="width: 50px;">Notes</th>
-                    <th class="text-center" style="width: 50px;">Date</th>
-                    <th class="text-center" style="width: 100px;">Actions</th>
+                    <th class="text-center col-w-50">#</th>
+                    <th class="text-center col-w-50">Customer</th>
+                    <th class="text-center col-w-50">Pay Method</th>
+                    <th class="text-center col-w-50">Notes</th>
+                    <th class="text-center col-w-50">Date</th>
+                    <th class="text-center col-w-100">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -58,18 +58,18 @@ $orders = array_reverse($all_orders);
 					</td>
 
                     <td class="text-center">
-						<?php echo ucfirst($order['customer']);?>
+						<?php echo h(ucfirst($order['customer']));?>
 					</td>
                     <td class="text-center">
-						<?php echo ucfirst($order['paymethod']);?>
-					</td>
-
-                    <td class="text-center">
-						<?php echo $order['notes'];?>
+						<?php echo h(ucfirst($order['paymethod']));?>
 					</td>
 
                     <td class="text-center">
-						<?php echo $order['date'];?>
+						<?php echo h($order['notes']);?>
+					</td>
+
+                    <td class="text-center">
+						<?php echo h($order['date']);?>
 					</td>
 
   <?php $customer = find_by_name('customers', $order['customer']); ?>
@@ -82,7 +82,7 @@ $orders = array_reverse($all_orders);
                         <a href="../customers/edit_customer.php?id=<?php echo (int)$customer['id'];?>"  class="btn btn-xs btn-info" data-toggle="tooltip" title="Customer Details">
                           <span class="glyphicon glyphicon-user"></span>
                         </a>
-                        <a href="../sales/delete_order.php?id=<?php echo (int)$order['id'];?>" onClick="return confirm('Are you sure you want to delete?')" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Remove">
+                        <a href="../sales/delete_order.php?id=<?php echo (int)$order['id'];?>&<?php echo csrf_url_param(); ?>" onClick="return confirm('Are you sure you want to delete?')" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Remove">
                           <span class="glyphicon glyphicon-trash"></span>
                         </a>
                       </div>

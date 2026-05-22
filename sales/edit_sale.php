@@ -9,7 +9,7 @@
 $page_title = 'Edit sale';
 require_once '../includes/load.php';
 // Checkin What level user has permission to view this page
-page_require_level(3);
+page_require_level(ROLE_USER);
 ?>
 
 
@@ -26,8 +26,9 @@ if (!$sale) {
 
 <?php
 
-if (isset($_POST['update_sale'])) {
-	$req_fields = array('title', 'order_id', 'quantity', 'price', 'total', 'date' );
+if (!verify_csrf()) { $session->msg('d', 'Invalid or missing security token.'); redirect($_SERVER['HTTP_REFERER'] ?? 'index.php', false); }
+  if (isset($_POST['update_sale'])) {
+$req_fields = array('title', 'order_id', 'quantity', 'price', 'total', 'date' );
 	validate_fields($req_fields);
 	if (empty($errors)) {
 		$o_id      = $db->escape((int)$_POST['order_id']);
@@ -63,7 +64,7 @@ if (isset($_POST['update_sale'])) {
 
 		$sql  = "UPDATE sales SET";
 		$sql .= " order_id= '{$o_id}', product_id= '{$p_id}',qty={$quantity},price='{$s_total}',date='{$s_date}'";
-		$sql .= " WHERE id ='{$sale['id']}'";
+		$sql .= " WHERE id ='{$sale['id']}' AND org_id = '" . current_org_id() . "'";
 		$result = $db->query($sql);
 
 		if ( $result && $db->affected_rows() === 1) {
@@ -127,6 +128,7 @@ if (isset($_POST['update_sale'])) {
            <tbody  id="product_info">
               <tr>
               <form method="post" action="../sales/edit_sale.php?id=<?php echo (int)$sale['id']; ?>">
+              <?php echo csrf_field(); ?>
 
                 <td>
                   <input type="text" class="form-control" name="order_id" value="<?php echo $order['id']; ?>">
@@ -134,7 +136,7 @@ if (isset($_POST['update_sale'])) {
 
 
                 <td id="s_name">
-                  <input type="text" class="form-control" id="sug_input" name="title" value="<?php echo $product['name']; ?>">
+                  <input type="text" class="form-control" id="sug_input" name="title" value="<?php echo h($product['name']); ?>">
 
                   <div id="result" class="list-group"></div>
 
@@ -143,7 +145,7 @@ if (isset($_POST['update_sale'])) {
                   <input type="text" class="form-control" name="quantity" value="<?php echo (int)$sale['qty']; ?>">
                 </td>
                 <td id="s_price">
-                  <input type="text" class="form-control" name="price" value="<?php echo $product['sale_price']; ?>" >
+                  <input type="text" class="form-control" name="price" value="<?php echo h($product['sale_price']); ?>" >
                 </td>
                 <td>
                   <input type="text" class="form-control" name="total" value="<?php echo $sale['price']; ?>">
